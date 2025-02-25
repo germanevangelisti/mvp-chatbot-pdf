@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from agent import agent
-from main import process_file_and_add_to_chroma
+from file_processing import process_file_and_add_to_chroma
 from retrieval import db
 
 import json

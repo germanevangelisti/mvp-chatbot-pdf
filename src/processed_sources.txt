@@ -40,3 +40,15 @@ data/GermanJacobEvangelistiResume.pdf
 data/GermanJacobEvangelistiResume.pdf
 data/GermanJacobEvangelistiResume.pdf
 data/GermanJacobEvangelistiResume.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf
+data/GAN-paper_markiv.pdf

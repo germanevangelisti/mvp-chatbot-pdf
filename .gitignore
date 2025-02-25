@@ -113,4 +113,5 @@ dmypy.json
 # FastAPI specific
 uploads/
 data/
-conversation_histories/ 
+conversation_histories/
+src/processed_sources.txt

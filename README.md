@@ -54,7 +54,7 @@ The MVP RAG Agent is an application designed to enhance text generation by retri
 
 - `src/`: Contains the project's source code.
   - `web_server.py`: Defines the API endpoints and handles requests.
-  - `main.py`: Processes files and adds them to ChromaDB.
+  - `file_processing.py`: Processes files and adds them to ChromaDB.
   - `retrieval.py`: Handles document retrieval from ChromaDB.
   - `templates/`: Contains HTML templates for the web interface.
   - `conversation_histories/`: Stores conversation histories in JSON format.
