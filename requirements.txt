@@ -1,0 +1,8 @@
+fastapi
+langchain
+langgraph
+langchain-openai
+langchain-chroma
+uvicorn
+chromadb
+langchain-community

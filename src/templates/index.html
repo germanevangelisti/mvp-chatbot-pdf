@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with AI Agent</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .chat-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 400px;
+            overflow-y: scroll;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .message {
+            margin: 5px 0;
+        }
+
+        .user {
+            color: blue;
+        }
+
+        .agent {
+            color: green;
+        }
+
+        .source-list {
+            margin-bottom: 20px;
+        }
+
+        .source-item {
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #ccc;
+            margin: 5px 0;
+        }
+
+        .selected {
+            background-color: #e0e0e0;
+        }
+
+        .clear-button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .input-container {
+            display: flex;
+            width: 100%;
+        }
+
+        .chat-input {
+            flex: 1;
+        }
+
+        .clear-button {
+            flex-shrink: 0;
+        }
+
+        .upload-container {
+            margin-top: 20px;
+        }
+
+        .upload-button {
+            margin-top: 5px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Chat with AI Agent</h1>
+        <div class="source-list" id="sourceList"></div>
+        <div class="upload-container">
+            <input type="file" id="fileInput" />
+            <button class="upload-button" onclick="uploadFile()">Upload File</button>
+        </div>
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-container">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message here..." />
+            <button class="clear-button" onclick="clearChat()">Clear Chat</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const chatInput = document.getElementById('chatInput');
+        const sourceList = document.getElementById('sourceList');
+        let selectedSourceName = null;
+
+        async function fetchSources() {
+            try {
+                const response = await fetch('http://localhost:8000/documents/sources/');
+                const data = await response.json();
+                sourceList.innerHTML = ''; // Clear existing list
+                data.sources.forEach(source => {
+                    const sourceElement = document.createElement('div');
+                    sourceElement.className = 'source-item';
+                    sourceElement.textContent = `${source.source} (${source.document_count} documents)`;
+                    sourceElement.onclick = () => selectSource(source.source, sourceElement);
+                    sourceList.appendChild(sourceElement);
+                });
+            } catch (error) {
+                console.error('Error fetching sources:', error);
+            }
+        }
+
+        function selectSource(source, element) {
+            if (selectedSourceName) {
+                selectedSourceName.classList.remove('selected');
+            }
+            selectedSourceName = element;
+            selectedSourceName.classList.add('selected');
+            loadConversationHistory(source);
+        }
+
+        function sanitizeSourceForURL(source) {
+            // Replace slashes with underscores
+            return source.replace(/\//g, '_');
+        }
+
+        async function loadConversationHistory(source) {
+            chatBox.innerHTML = ''; // Clear chat box
+            try {
+                // Sanitize the source for URL
+                const sanitizedSource = sanitizeSourceForURL(source);
+                const response = await fetch(`http://localhost:8000/chat/history/${sanitizedSource}`);
+                const data = await response.json();
+                if (response.ok && Array.isArray(data)) {
+                    data.forEach(entry => {
+                        appendMessage('user', entry.user);
+                        appendMessage('agent', entry.agent);
+                    });
+                } else {
+                    console.error('Error loading conversation history:', data);
+                }
+            } catch (error) {
+                console.error('Error loading conversation history:', error);
+            }
+        }
+
+        chatInput.addEventListener('keypress', async function (event) {
+            if (event.key === 'Enter' && selectedSourceName) {
+                const userMessage = chatInput.value;
+                chatInput.value = '';
+                appendMessage('user', userMessage);
+
+                try {
+                    const response = await fetch('http://localhost:8000/chat/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ query: userMessage, source: selectedSourceName.textContent })
+                    });
+
+                    const data = await response.json();
+                    appendMessage('agent', data.response);
+                } catch (error) {
+                    appendMessage('agent', 'Error: ' + error.message);
+                }
+            }
+        });
+
+        let isFirstMessage = true; // Variable para rastrear si es el primer mensaje
+
+        function appendMessage(sender, message) {
+            const messageContainer = document.createElement('div'); // Contenedor del mensaje
+            messageContainer.className = 'message-container';
+
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message ' + sender;
+
+            // Solo agregar un salto de línea si no es el primer mensaje
+            if (!isFirstMessage) {
+                messageContainer.appendChild(document.createElement('br'));
+            } else {
+                isFirstMessage = false; // Marcar que el primer mensaje ya ha sido enviado
+            }
+
+            if (sender === 'agent') {
+                // Formatear listas numeradas
+                message = message.replace(/(\d+)\.\s/g, '<br><strong>$1.</strong> ');
+                message = message.replace(/\n/g, "<br>"); // Asegurar saltos de línea
+            }
+
+            messageElement.innerHTML = `<strong>${sender === 'user' ? 'You' : 'Agent'}:</strong><br>${message}`;
+
+            messageContainer.appendChild(messageElement);
+            chatBox.appendChild(messageContainer);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function clearChat() {
+            chatBox.innerHTML = ''; // Clear the chat box
+            if (selectedSourceName) {
+                const sanitizedSource = sanitizeSourceForURL(selectedSourceName.textContent);
+                fetch(`http://localhost:8000/chat/history/${sanitizedSource}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error('Error clearing conversation history:', data.error);
+                        } else {
+                            console.log(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error clearing conversation history:', error);
+                    });
+            }
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please select a file to upload.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://localhost:8000/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert("File uploaded successfully.");
+                    fetchSources(); // Refresh the source list
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error uploading file:', errorData);
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+            }
+        }
+
+        fetchSources();
+    </script>
+</body>
+
+</html>
