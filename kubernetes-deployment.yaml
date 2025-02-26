@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rag-agent
+  template:
+    metadata:
+      labels:
+        app: rag-agent
+    spec:
+      containers:
+      - name: rag-agent
+        image: tuusuario/rag-agent:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-secrets
+              key: openai-key
+        - name: CHROMA_DB_PATH
+          value: "/app/chroma_db"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+        - name: conversations-volume
+          mountPath: /app/conversation_histories
+        - name: chroma-volume
+          mountPath: /app/chroma_db
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: data-pvc
+      - name: conversations-volume
+        persistentVolumeClaim:
+          claimName: conversations-pvc
+      - name: chroma-volume
+        persistentVolumeClaim:
+          claimName: chroma-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-agent-service
+spec:
+  selector:
+    app: rag-agent
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: LoadBalancer 

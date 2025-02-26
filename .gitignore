@@ -110,8 +110,13 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# ChromaDB
+chroma_db/
+
 # FastAPI specific
 uploads/
 data/
 conversation_histories/
 processed_sources.txt
+processed_sources.json
+processed_sources.json

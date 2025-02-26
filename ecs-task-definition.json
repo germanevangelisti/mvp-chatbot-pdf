@@ -1,0 +1,42 @@
+{
+  "family": "rag-agent",
+  "executionRoleArn": "arn:aws:iam::tu-cuenta:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "rag-agent",
+      "image": "tu-cuenta.dkr.ecr.tu-region.amazonaws.com/rag-agent:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "hostPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "OPENAI_API_KEY",
+          "value": "tu-clave-api"
+        },
+        {
+          "name": "CHROMA_DB_PATH",
+          "value": "/app/chroma_db"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/rag-agent",
+          "awslogs-region": "tu-region",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "1024",
+  "memory": "2048"
+} 
