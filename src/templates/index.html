@@ -119,11 +119,41 @@
                 const data = await response.json();
                 sourceList.innerHTML = ''; // Clear existing list
                 data.sources.forEach(source => {
+                    // Crear un contenedor para cada source y su botón de eliminación
+                    const sourceContainer = document.createElement('div');
+                    sourceContainer.style.display = 'flex';
+                    sourceContainer.style.justifyContent = 'space-between';
+                    sourceContainer.style.alignItems = 'center';
+                    sourceContainer.style.marginBottom = '5px';
+                    
+                    // Crear el elemento de la fuente
                     const sourceElement = document.createElement('div');
                     sourceElement.className = 'source-item';
+                    sourceElement.style.flexGrow = '1';
                     sourceElement.textContent = `${source.source} (${source.document_count} documents)`;
                     sourceElement.onclick = () => selectSource(source.source, sourceElement);
-                    sourceList.appendChild(sourceElement);
+                    
+                    // Crear el botón de eliminación
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.style.backgroundColor = '#f44336';
+                    deleteButton.style.color = 'white';
+                    deleteButton.style.border = 'none';
+                    deleteButton.style.padding = '5px 10px';
+                    deleteButton.style.marginLeft = '10px';
+                    deleteButton.style.cursor = 'pointer';
+                    deleteButton.style.borderRadius = '3px';
+                    deleteButton.onclick = (e) => {
+                        e.stopPropagation(); // Evitar que se seleccione el source al hacer clic en el botón
+                        deleteSource(source.source);
+                    };
+                    
+                    // Añadir elementos al contenedor
+                    sourceContainer.appendChild(sourceElement);
+                    sourceContainer.appendChild(deleteButton);
+                    
+                    // Añadir el contenedor a la lista
+                    sourceList.appendChild(sourceContainer);
                 });
             } catch (error) {
                 console.error('Error fetching sources:', error);
@@ -263,6 +293,33 @@
                 }
             } catch (error) {
                 console.error('Error uploading file:', error);
+            }
+        }
+
+        // Función para eliminar un source de la base de datos
+        async function deleteSource(source) {
+            if (confirm(`Are you sure you want to delete "${source}"?`)) {
+                try {
+                    // const sanitizedSource = sanitizeSourceForURL(source);
+                    const response = await fetch(`http://localhost:8000/documents/delete/${source}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+                    alert(data.message);
+                    
+                    // Actualizar la lista de sources
+                    fetchSources();
+                    
+                    // Limpiar el chat si el source eliminado estaba seleccionado
+                    if (selectedSourceName && selectedSourceName.textContent.startsWith(source)) {
+                        chatBox.innerHTML = '';
+                        selectedSourceName.classList.remove('selected');
+                        selectedSourceName = null;
+                    }
+                } catch (error) {
+                    console.error('Error deleting source:', error);
+                    alert('Error deleting source. Please try again.');
+                }
             }
         }
 

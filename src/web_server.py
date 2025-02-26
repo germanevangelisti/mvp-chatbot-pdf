@@ -147,3 +147,48 @@ async def upload_file(file: UploadFile = File(...)):
         return {"message": "File uploaded and processed successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/documents/delete/{source:path}")
+async def delete_document(source: str):
+    """Endpoint to delete a document from ChromaDB by source."""
+    try:
+        # Get all documents
+        all_docs = db.get()
+        ids_to_delete = []
+        
+        # Find the document IDs to delete
+        for i, metadata in enumerate(all_docs.get("metadatas", [])):
+            if metadata.get("source") == source:
+                ids_to_delete.append(all_docs.get("ids", [])[i])
+        
+        # Delete the documents
+        if ids_to_delete:
+            db.delete(ids=ids_to_delete)
+            
+            # Also delete conversation history for this source
+            sanitized_source = sanitize_filename(source)
+            history_file = f"{CONVERSATION_HISTORY_PATH}/{sanitized_source}.json"
+            if os.path.exists(history_file):
+                os.remove(history_file)
+            
+            # Delete the local file in the data directory
+            local_file_path = f"{source}"
+            if os.path.exists(local_file_path):
+                os.remove(local_file_path)
+            
+            # Remove references from processed_sources.txt
+            processed_sources_path = "processed_sources.txt"
+            if os.path.exists(processed_sources_path):
+                with open(processed_sources_path, "r") as file:
+                    lines = file.readlines()
+                with open(processed_sources_path, "w") as file:
+                    for line in lines:
+                        if line.strip() != f"{source}":
+                            file.write(line)
+                
+            return {"message": f"Successfully deleted {len(ids_to_delete)} documents from {source}"}
+        else:
+            return {"message": f"No documents found for source: {source}"}
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

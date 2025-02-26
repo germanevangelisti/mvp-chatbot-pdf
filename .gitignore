@@ -114,4 +114,4 @@ dmypy.json
 uploads/
 data/
 conversation_histories/
-src/processed_sources.txt
+processed_sources.txt
