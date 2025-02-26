@@ -1,6 +1,6 @@
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
-from config import OPENAI_API_KEY, CHROMA_DB_PATH
+from .config import OPENAI_API_KEY, CHROMA_DB_PATH
 
 embedding_model = OpenAIEmbeddings(
     model="text-embedding-3-small", openai_api_key=OPENAI_API_KEY

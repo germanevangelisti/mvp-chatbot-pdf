@@ -1,5 +1,5 @@
-from data_ingestion import load_documents
-from embedding_store import store_embeddings
+from .data_ingestion import load_documents
+from .embedding_store import store_embeddings
 import os
 
 def get_processed_sources(directory="data/"):

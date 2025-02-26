@@ -2,23 +2,26 @@ from fastapi import FastAPI, Request, File, UploadFile, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from agent import agent
-from file_processing import process_file_and_add_to_chroma
-from retrieval import db
+from .agent import agent
+from .file_processing import process_file_and_add_to_chroma
+from .retrieval import db
 
 import json
 import os
 import re
 import shutil
+from pathlib import Path
 
 
 app = FastAPI()
 
-# Configura Jinja2Templates para buscar en la carpeta "templates"
-templates = Jinja2Templates(directory="templates")
+# Define the base directory of the project
+BASE_DIR = Path(__file__).resolve().parent.parent
+# Configure Jinja2Templates to look in the templates folder using an absolute path
+templates = Jinja2Templates(directory=str(BASE_DIR / "src/templates"))
 
 # Path to store conversation histories
-CONVERSATION_HISTORY_PATH = "conversation_histories"
+CONVERSATION_HISTORY_PATH = str(BASE_DIR / "conversation_histories")
 
 class QueryRequest(BaseModel):
     query: str
@@ -144,8 +147,3 @@ async def upload_file(file: UploadFile = File(...)):
         return {"message": "File uploaded and processed successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("web_server:app", host="0.0.0.0", port=8000, reload=True)

@@ -3,8 +3,8 @@ from langchain.prompts import PromptTemplate
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain.memory import ConversationBufferMemory
 from langchain_core.messages import HumanMessage, AIMessage
-from retrieval import retrieve_relevant_docs
-from config import OPENAI_API_KEY
+from .retrieval import retrieve_relevant_docs
+from .config import OPENAI_API_KEY
 
 # Initialize the language model
 llm = ChatOpenAI(api_key=OPENAI_API_KEY)
@@ -76,6 +76,7 @@ def generate_response(query, source):
     
     # Retrieve conversation history from memory
     chat_history = memory.load_memory_variables({}).get("chat_history", [])
+    print(f"Chat history: {chat_history}")
     formatted_history = format_chat_history(chat_history)
     
     # Generate a response using the prompt template
